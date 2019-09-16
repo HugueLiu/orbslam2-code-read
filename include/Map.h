@@ -40,7 +40,9 @@ class Map
 public:
     Map();
 
+    // 添加一个关键帧
     void AddKeyFrame(KeyFrame* pKF);
+    // 添加地图点
     void AddMapPoint(MapPoint* pMP);
     void EraseMapPoint(MapPoint* pMP);
     void EraseKeyFrame(KeyFrame* pKF);
@@ -48,15 +50,22 @@ public:
     void InformNewBigChange();
     int GetLastBigChangeIdx();
 
+    // 返回所有关键帧
     std::vector<KeyFrame*> GetAllKeyFrames();
+    // 返回所有地图点
     std::vector<MapPoint*> GetAllMapPoints();
+    // 
     std::vector<MapPoint*> GetReferenceMapPoints();
 
+    // 返回地图中点的个数
     long unsigned int MapPointsInMap();
+    // 返回地图中关键帧的个数
     long unsigned  KeyFramesInMap();
 
+    // 返回地图中最大的关键帧ID
     long unsigned int GetMaxKFid();
 
+    // 清空所有关键帧和地图点
     void clear();
 
     vector<KeyFrame*> mvpKeyFrameOrigins;
@@ -67,11 +76,14 @@ public:
     std::mutex mMutexPointCreation;
 
 protected:
+    // 地图中所有的点
     std::set<MapPoint*> mspMapPoints;
+    // 地图中的所有关键帧
     std::set<KeyFrame*> mspKeyFrames;
 
     std::vector<MapPoint*> mvpReferenceMapPoints;
 
+    // 该地图中最大的关键帧ID
     long unsigned int mnMaxKFid;
 
     // Index related to a big change in the map (loop closure, global BA)

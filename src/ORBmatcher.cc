@@ -158,14 +158,16 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
 
 int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
 {
+    // 参考帧的地图点
     const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
-
+    // 匹配结果
     vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
-
+    // 参考帧的FeatureVector
     const DBoW2::FeatureVector &vFeatVecKF = pKF->mFeatVec;
-
+    // 匹配到特征点的数量
     int nmatches=0;
 
+    // 角度差直方图
     vector<int> rotHist[HISTO_LENGTH];
     for(int i=0;i<HISTO_LENGTH;i++)
         rotHist[i].reserve(500);
@@ -179,6 +181,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
 
     while(KFit != KFend && Fit != Fend)
     {
+        // Node ID相同
         if(KFit->first == Fit->first)
         {
             const vector<unsigned int> vIndicesKF = KFit->second;
@@ -186,6 +189,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
 
             for(size_t iKF=0; iKF<vIndicesKF.size(); iKF++)
             {
+                // 特征索引
                 const unsigned int realIdxKF = vIndicesKF[iKF];
 
                 MapPoint* pMP = vpMapPointsKF[realIdxKF];
@@ -196,10 +200,13 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                 if(pMP->isBad())
                     continue;                
 
+                // 该点描述子
                 const cv::Mat &dKF= pKF->mDescriptors.row(realIdxKF);
 
+                // 最小距离
                 int bestDist1=256;
                 int bestIdxF =-1 ;
+                // 第二小距离
                 int bestDist2=256;
 
                 for(size_t iF=0; iF<vIndicesF.size(); iF++)
@@ -236,8 +243,10 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                         if(mbCheckOrientation)
                         {
                             float rot = kp.angle-F.mvKeys[bestIdxF].angle;
+                            // [0-720]
                             if(rot<0.0)
                                 rot+=360.0f;
+                            // 直方图横坐标??????
                             int bin = round(rot*factor);
                             if(bin==HISTO_LENGTH)
                                 bin=0;
@@ -271,7 +280,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
         int ind3=-1;
 
         ComputeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
-
+        // 只保留三个最多的方向的特征匹配点（一致性）
         for(int i=0; i<HISTO_LENGTH; i++)
         {
             if(i==ind1 || i==ind2 || i==ind3)
@@ -1343,10 +1352,12 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     const cv::Mat Rlw = LastFrame.mTcw.rowRange(0,3).colRange(0,3);
     const cv::Mat tlw = LastFrame.mTcw.rowRange(0,3).col(3);
 
+    // 上一帧中的相机在该帧中相机坐标系下的位姿
     const cv::Mat tlc = Rlw*twc+tlw;
 
-    const bool bForward = tlc.at<float>(2)>CurrentFrame.mb && !bMono;
-    const bool bBackward = -tlc.at<float>(2)>CurrentFrame.mb && !bMono;
+    // 前进或后退的距离大于双目基线长度
+    const bool bForward = tlc.at<float>(2) > CurrentFrame.mb && !bMono;
+    const bool bBackward = -tlc.at<float>(2) > CurrentFrame.mb && !bMono;
 
     for(int i=0; i<LastFrame.N; i++)
     {
@@ -1358,6 +1369,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
             {
                 // Project
                 cv::Mat x3Dw = pMP->GetWorldPos();
+                // 相机坐标系下坐标
                 cv::Mat x3Dc = Rcw*x3Dw+tcw;
 
                 const float xc = x3Dc.at<float>(0);
@@ -1382,11 +1394,15 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
                 vector<size_t> vIndices2;
 
+                // 查找该点附近的关键点
                 if(bForward)
+                    // 若前进则该关键点会变大，所以查找其上面几层的关键点
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave);
                 else if(bBackward)
+                    // 若后退则该关键点会变小，所以查找其下面几层的关键点
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, 0, nLastOctave);
                 else
+                    // 前进后退不明显，在附近几层查找
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave-1, nLastOctave+1);
 
                 if(vIndices2.empty())
@@ -1397,6 +1413,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 int bestDist = 256;
                 int bestIdx2 = -1;
 
+                // 在当前帧中查找与上一帧中最相似的关键点（同一点）
                 for(vector<size_t>::const_iterator vit=vIndices2.begin(), vend=vIndices2.end(); vit!=vend; vit++)
                 {
                     const size_t i2 = *vit;
@@ -1406,14 +1423,16 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
                     if(CurrentFrame.mvuRight[i2]>0)
                     {
+                        // 通过左图计算出的在右图上的u
                         const float ur = u - CurrentFrame.mbf*invzc;
+                        // 实际值与理论值差距
                         const float er = fabs(ur - CurrentFrame.mvuRight[i2]);
                         if(er>radius)
                             continue;
                     }
 
                     const cv::Mat &d = CurrentFrame.mDescriptors.row(i2);
-
+                    // 上一帧与当前帧的比较
                     const int dist = DescriptorDistance(dMP,d);
 
                     if(dist<bestDist)
@@ -1444,7 +1463,8 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
         }
     }
 
-    //Apply rotation consistency
+    // Apply rotation consistency
+    // 只保留匹配关键点数量最多的三个方向
     if(mbCheckOrientation)
     {
         int ind1=-1;
@@ -1644,6 +1664,7 @@ void ORBmatcher::ComputeThreeMaxima(vector<int>* histo, const int L, int &ind1, 
 
 // Bit set count operation from
 // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+
 int ORBmatcher::DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
 {
     const int *pa = a.ptr<int32_t>();
@@ -1653,7 +1674,7 @@ int ORBmatcher::DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
 
     for(int i=0; i<8; i++, pa++, pb++)
     {
-        unsigned  int v = *pa ^ *pb;
+        unsigned int v = *pa ^ *pb;
         v = v - ((v >> 1) & 0x55555555);
         v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
         dist += (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;

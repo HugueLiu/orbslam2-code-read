@@ -76,6 +76,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     }
     DistCoef.copyTo(mDistCoef);
 
+    // 基线乘以fx
     mbf = fSettings["Camera.bf"];
 
     float fps = fSettings["Camera.fps"];
@@ -100,6 +101,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     cout << "- fps: " << fps << endl;
 
 
+    // 颜色顺序（0: BGR, 1: RGB）
     int nRGB = fSettings["Camera.RGB"];
     mbRGB = nRGB;
 
@@ -133,7 +135,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
     if(sensor==System::STEREO || sensor==System::RGBD)
     {
-        mThDepth = mbf*(float)fSettings["ThDepth"]/fx;
+        mThDepth = mbf*(float)fSettings["ThDepth"]/fx; // b*depth
         cout << endl << "Depth Threshold (Close/Far Points): " << mThDepth << endl;
     }
 
@@ -276,6 +278,7 @@ void Tracking::Track()
     // Get Map Mutex -> Map cannot be changed
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
+    // 初始化
     if(mState==NOT_INITIALIZED)
     {
         if(mSensor==System::STEREO || mSensor==System::RGBD)
@@ -294,6 +297,7 @@ void Tracking::Track()
         bool bOK;
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
+        // 定位与建图
         if(!mbOnlyTracking)
         {
             // Local Mapping is activated. This is the normal behaviour, unless
@@ -304,8 +308,10 @@ void Tracking::Track()
                 // Local Mapping might have changed some MapPoints tracked in last frame
                 CheckReplacedInLastFrame();
 
+                //    或与上一个重定位的帧距离小于2
                 if(mVelocity.empty() || mCurrentFrame.mnId<mnLastRelocFrameId+2)
                 {
+                    // 
                     bOK = TrackReferenceKeyFrame();
                 }
                 else
@@ -486,6 +492,7 @@ void Tracking::Track()
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
+    // 存储所有的相机位姿
     if(!mCurrentFrame.mTcw.empty())
     {
         cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
@@ -525,6 +532,7 @@ void Tracking::StereoInitialization()
             float z = mCurrentFrame.mvDepth[i];
             if(z>0)
             {
+                // 关键点世界坐标系坐标
                 cv::Mat x3D = mCurrentFrame.UnprojectStereo(i);
                 MapPoint* pNewMP = new MapPoint(x3D,pKFini,mpMap);
                 pNewMP->AddObservation(pKFini,i);
@@ -764,14 +772,16 @@ bool Tracking::TrackReferenceKeyFrame()
     ORBmatcher matcher(0.7,true);
     vector<MapPoint*> vpMapPointMatches;
 
+    // 关键点的匹配情况
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
     if(nmatches<15)
         return false;
 
     mCurrentFrame.mvpMapPoints = vpMapPointMatches;
+    // 当前帧的位姿初始值
     mCurrentFrame.SetPose(mLastFrame.mTcw);
-
+    // 位姿优化 
     Optimizer::PoseOptimization(&mCurrentFrame);
 
     // Discard outliers
@@ -806,6 +816,7 @@ void Tracking::UpdateLastFrame()
 
     mLastFrame.SetPose(Tlr*pRef->GetPose());
 
+    // 上一帧为关键帧、单目、定位与建图
     if(mnLastKeyFrameId==mLastFrame.mnId || mSensor==System::MONOCULAR || !mbOnlyTracking)
         return;
 
@@ -825,10 +836,13 @@ void Tracking::UpdateLastFrame()
     if(vDepthIdx.empty())
         return;
 
+    // 按照深度从小到大排序
     sort(vDepthIdx.begin(),vDepthIdx.end());
 
     // We insert all close points (depth<mThDepth)
     // If less than 100 close points, we insert the 100 closest ones.
+
+    // 有什么意义？？
     int nPoints = 0;
     for(size_t j=0; j<vDepthIdx.size();j++)
     {
@@ -882,6 +896,7 @@ bool Tracking::TrackWithMotionModel()
         th=15;
     else
         th=7;
+    // 匹配到的关键点个数
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==System::MONOCULAR);
 
     // If few matches, uses a wider window search

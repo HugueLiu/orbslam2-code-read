@@ -59,6 +59,9 @@ public:
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
+    // strVocFile: 字典文件
+    // strSettingsFile: 配置文件
+    // sensor: 输入图像类型
     System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
@@ -77,8 +80,10 @@ public:
     // Returns the camera pose (empty if tracking fails).
     cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp);
 
+    // 只定位，不建图
     // This stops local mapping thread (map building) and performs only camera tracking.
     void ActivateLocalizationMode();
+    // 同时定位与建图
     // This resumes local mapping thread and performs SLAM again.
     void DeactivateLocalizationMode();
 

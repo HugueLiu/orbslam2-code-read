@@ -122,10 +122,13 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     }   
 
     // Check mode change
+    // 模式是通过用户按钮控制的
     {
         unique_lock<mutex> lock(mMutexMode);
+        // 定位模式
         if(mbActivateLocalizationMode)
         {
+            // 关闭LocalMapping线程
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
@@ -137,6 +140,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
             mpTracker->InformOnlyTracking(true);
             mbActivateLocalizationMode = false;
         }
+        // 建图模式
         if(mbDeactivateLocalizationMode)
         {
             mpTracker->InformOnlyTracking(false);
@@ -147,12 +151,12 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
-    }
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
 
     cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft,imRight,timestamp);

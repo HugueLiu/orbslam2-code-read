@@ -41,6 +41,7 @@ public:
     ORBmatcher(float nnratio=0.6, bool checkOri=true);
 
     // Computes the Hamming distance between two ORB descriptors
+    // 两个描述子之间的Hamming距离
     static int DescriptorDistance(const cv::Mat &a, const cv::Mat &b);
 
     // Search matches between Frame keypoints and projected MapPoints. Returns number of matches
@@ -49,6 +50,7 @@ public:
 
     // Project MapPoints tracked in last frame into the current frame and search matches.
     // Used to track from previous frame (Tracking)
+    // 通过重投影来查找当前帧与上一帧的匹配点
     int SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono);
 
     // Project MapPoints seen in KeyFrame into the Frame and search matches.
@@ -62,6 +64,7 @@ public:
     // Search matches between MapPoints in a KeyFrame and ORB in a Frame.
     // Brute force constrained to ORB that belong to the same vocabulary node (at a certain level)
     // Used in Relocalisation and Loop Detection
+    // 一个关键帧中的地图点与一帧中的特征点的匹配，返回匹配到的数量
     int SearchByBoW(KeyFrame *pKF, Frame &F, std::vector<MapPoint*> &vpMapPointMatches);
     int SearchByBoW(KeyFrame *pKF1, KeyFrame* pKF2, std::vector<MapPoint*> &vpMatches12);
 
@@ -84,7 +87,9 @@ public:
 
 public:
 
+    // 最小阈值
     static const int TH_LOW;
+    // 最大阈值
     static const int TH_HIGH;
     static const int HISTO_LENGTH;
 
@@ -95,9 +100,11 @@ protected:
 
     float RadiusByViewingCos(const float &viewCos);
 
+    // 计算直方图中最大的三个值的索引
     void ComputeThreeMaxima(std::vector<int>* histo, const int L, int &ind1, int &ind2, int &ind3);
 
     float mfNNratio;
+    // 关键点匹配时是否检查方向
     bool mbCheckOrientation;
 };
 

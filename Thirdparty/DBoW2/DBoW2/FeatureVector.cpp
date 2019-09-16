@@ -31,11 +31,12 @@ FeatureVector::~FeatureVector(void)
 void FeatureVector::addFeature(NodeId id, unsigned int i_feature)
 {
   FeatureVector::iterator vit = this->lower_bound(id);
-  
+  // 已有该id，只需插入i_feature
   if(vit != this->end() && vit->first == id)
   {
     vit->second.push_back(i_feature);
   }
+  // 没有该id, 首先插入id，再插入i_feature
   else
   {
     vit = this->insert(vit, FeatureVector::value_type(id, 

@@ -101,7 +101,7 @@ void MapPoint::AddObservation(KeyFrame* pKF, size_t idx)
     if(mObservations.count(pKF))
         return;
     mObservations[pKF]=idx;
-
+    // 若在右图中也可以看到
     if(pKF->mvuRight[idx]>=0)
         nObs+=2;
     else
@@ -289,6 +289,7 @@ void MapPoint::ComputeDistinctiveDescriptors()
     int BestIdx = 0;
     for(size_t i=0;i<N;i++)
     {
+        // 选择一行
         vector<int> vDists(Distances[i],Distances[i]+N);
         sort(vDists.begin(),vDists.end());
         int median = vDists[0.5*(N-1)];
@@ -302,6 +303,7 @@ void MapPoint::ComputeDistinctiveDescriptors()
 
     {
         unique_lock<mutex> lock(mMutexFeatures);
+        // 选择与其他的描述子平均差距最小的一个
         mDescriptor = vDescriptors[BestIdx].clone();
     }
 }
@@ -352,6 +354,7 @@ void MapPoint::UpdateNormalAndDepth()
         KeyFrame* pKF = mit->first;
         cv::Mat Owi = pKF->GetCameraCenter();
         cv::Mat normali = mWorldPos - Owi;
+        // L2范数，空间距离
         normal = normal + normali/cv::norm(normali);
         n++;
     }

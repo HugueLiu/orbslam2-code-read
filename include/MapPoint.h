@@ -42,38 +42,55 @@ public:
     MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
     MapPoint(const cv::Mat &Pos,  Map* pMap, Frame* pFrame, const int &idxF);
 
+    // 设置该MapPoint的世界坐标
     void SetWorldPos(const cv::Mat &Pos);
+    // 获取该MapPoint的世界坐标
     cv::Mat GetWorldPos();
 
     cv::Mat GetNormal();
     KeyFrame* GetReferenceKeyFrame();
 
+    // 返回所有观察到MapPoint的关键帧及索引
     std::map<KeyFrame*,size_t> GetObservations();
+    // 返回观察到该MapPoint的关键帧数量
     int Observations();
-
+    // 增加看到该点的关键帧
     void AddObservation(KeyFrame* pKF,size_t idx);
+    // 去除看到该点的关键帧
     void EraseObservation(KeyFrame* pKF);
 
+    // 该MapPoint在该关键帧中的index，不存在则返回-1
     int GetIndexInKeyFrame(KeyFrame* pKF);
+    // 该MapPoint是否存在于该关键帧中
     bool IsInKeyFrame(KeyFrame* pKF);
 
+    // 设置该MapPoint为"Bad"，并清除对应关键帧及地图中的该点， 即删除该MapPoint
     void SetBadFlag();
+    // 返回该MapPoint是否“Bad”
     bool isBad();
 
-    void Replace(MapPoint* pMP);    
+    // 用新的MapPoint代替当前MapPoint，不会立即删除原对象，而是设置mpReplaced变量
+    void Replace(MapPoint* pMP);
+    // 返回替代该MapPoint的对象
     MapPoint* GetReplaced();
 
+    // ?
     void IncreaseVisible(int n=1);
+    // ?
     void IncreaseFound(int n=1);
+    // found/visible
     float GetFoundRatio();
     inline int GetFound(){
         return mnFound;
     }
 
+    // 为该点选择一个与其他描述距离最小的描述子
     void ComputeDistinctiveDescriptors();
 
+    // 返回该点描述子
     cv::Mat GetDescriptor();
 
+    // 更新该点平均方向
     void UpdateNormalAndDepth();
 
     float GetMinDistanceInvariance();
@@ -82,20 +99,26 @@ public:
     int PredictScale(const float &currentDist, Frame* pF);
 
 public:
+    // MapPoint ID
     long unsigned int mnId;
     static long unsigned int nNextId;
+    // 该点关联的关键帧ID
     long int mnFirstKFid;
+    // 该点关联的Frame ID
     long int mnFirstFrame;
+    // 观测到该点的关键帧数量
     int nObs;
 
     // Variables used by the tracking
     float mTrackProjX;
     float mTrackProjY;
     float mTrackProjXR;
+    // 是否追踪该点
     bool mbTrackInView;
     int mnTrackScaleLevel;
     float mTrackViewCos;
     long unsigned int mnTrackReferenceForFrame;
+    // 观测到该点的最后一帧ID
     long unsigned int mnLastFrameSeen;
 
     // Variables used by local mapping
@@ -114,37 +137,42 @@ public:
 
 protected:    
 
-     // Position in absolute coordinates
-     cv::Mat mWorldPos;
+    // Position in absolute coordinates
+    // 该点的世界坐标
+    cv::Mat mWorldPos;
 
-     // Keyframes observing the point and associated index in keyframe
-     std::map<KeyFrame*,size_t> mObservations;
+    // Keyframes observing the point and associated index in keyframe
+    // 观测到该点的关键帧以及在该关键帧中的索引
+    std::map<KeyFrame*,size_t> mObservations;
 
-     // Mean viewing direction
-     cv::Mat mNormalVector;
+    // Mean viewing direction
+    // 该点在所有看到该点的关键帧中的方向的平均值
+    cv::Mat mNormalVector;
 
-     // Best descriptor to fast matching
-     cv::Mat mDescriptor;
+    // Best descriptor to fast matching，描述子
+    cv::Mat mDescriptor;
 
-     // Reference KeyFrame
-     KeyFrame* mpRefKF;
+    // Reference KeyFrame，参考关键帧
+    KeyFrame* mpRefKF;
 
-     // Tracking counters
-     int mnVisible;
-     int mnFound;
+    // Tracking counters
+    int mnVisible;
+    int mnFound;
 
-     // Bad flag (we do not currently erase MapPoint from memory)
-     bool mbBad;
-     MapPoint* mpReplaced;
+    // 指明该对象是否可用？Bad flag (we do not currently erase MapPoint from memory)
+    bool mbBad;
+    // 代替该对象的变量
+    MapPoint* mpReplaced;
 
-     // Scale invariance distances
-     float mfMinDistance;
-     float mfMaxDistance;
+    // Scale invariance distances
+    float mfMinDistance;
+    float mfMaxDistance;
 
-     Map* mpMap;
+    // 地图
+    Map* mpMap;
 
-     std::mutex mMutexPos;
-     std::mutex mMutexFeatures;
+    std::mutex mMutexPos;
+    std::mutex mMutexFeatures;
 };
 
 } //namespace ORB_SLAM

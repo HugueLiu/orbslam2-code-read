@@ -25,6 +25,7 @@
 namespace ORB_SLAM2
 {
 
+// 初始化函数
 Map::Map():mnMaxKFid(0),mnBigChangeIdx(0)
 {
 }

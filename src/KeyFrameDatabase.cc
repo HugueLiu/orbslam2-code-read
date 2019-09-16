@@ -53,7 +53,7 @@ void KeyFrameDatabase::erase(KeyFrame* pKF)
     for(DBoW2::BowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit!=vend; vit++)
     {
         // List of keyframes that share the word
-        list<KeyFrame*> &lKFs =   mvInvertedFile[vit->first];
+        list<KeyFrame*> &lKFs = mvInvertedFile[vit->first];
 
         for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
         {
@@ -211,6 +211,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
             for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
             {
                 KeyFrame* pKFi=*lit;
+                // pKFi->mnRelocQuery默认为0
                 if(pKFi->mnRelocQuery!=F->mnId)
                 {
                     pKFi->mnRelocWords=0;

@@ -65,7 +65,9 @@ void Viewer::Run()
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // 控制面板
     pangolin::CreatePanel("menu").SetBounds(0.0,1.0,0.0,pangolin::Attach::Pix(175));
+    // 按钮名称，默认状态，是否有选择框
     pangolin::Var<bool> menuFollowCamera("menu.Follow Camera",true,true);
     pangolin::Var<bool> menuShowPoints("menu.Show Points",true,true);
     pangolin::Var<bool> menuShowKeyFrames("menu.Show KeyFrames",true,true);
@@ -89,7 +91,9 @@ void Viewer::Run()
 
     cv::namedWindow("ORB-SLAM2: Current Frame");
 
+    // 当前状态：当前是否追随相机
     bool bFollow = true;
+    // 当前是否处于定位模式
     bool bLocalizationMode = false;
 
     while(1)

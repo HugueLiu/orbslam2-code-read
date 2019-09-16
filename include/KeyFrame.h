@@ -43,15 +43,23 @@ class KeyFrameDatabase;
 class KeyFrame
 {
 public:
+    // 使用Frame创建关键帧
     KeyFrame(Frame &F, Map* pMap, KeyFrameDatabase* pKFDB);
 
     // Pose functions
+    // 设置当前关键帧位姿
     void SetPose(const cv::Mat &Tcw);
+    // 返回当前关键帧位姿(Tcw)
     cv::Mat GetPose();
+    // 返回当前关键帧位姿(Twc)
     cv::Mat GetPoseInverse();
+    // 返回相机中心坐标
     cv::Mat GetCameraCenter();
+    // 返回基线中心坐标
     cv::Mat GetStereoCenter();
+    // 返回旋转矩阵
     cv::Mat GetRotation();
+    // 返回平移矩阵
     cv::Mat GetTranslation();
 
     // Bag of Words Representation
@@ -81,13 +89,21 @@ public:
     std::set<KeyFrame*> GetLoopEdges();
 
     // MapPoint observation functions
+    // 添加MapPoint
     void AddMapPoint(MapPoint* pMP, const size_t &idx);
+    // 清除指定索引的MapPoint
     void EraseMapPointMatch(const size_t &idx);
+    // 清除指定MapPoint
     void EraseMapPointMatch(MapPoint* pMP);
+    // 修改指定索引的MapPoint
     void ReplaceMapPointMatch(const size_t &idx, MapPoint* pMP);
+    // 返回所有“好”的MapPoint
     std::set<MapPoint*> GetMapPoints();
+    // 返回所有的MapPoint
     std::vector<MapPoint*> GetMapPointMatches();
+    // 返回追踪的MapPoint数量，该点关联关键帧必须大于指定个数
     int TrackedMapPoints(const int &minObs);
+    // 返回指定索引的MapPoint
     MapPoint* GetMapPoint(const size_t &idx);
 
     // KeyPoint functions
@@ -120,16 +136,24 @@ public:
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
 
+    // 下一关键帧帧ID
     static long unsigned int nNextId;
+    // 当前关键帧ID
     long unsigned int mnId;
+    // 当前关键帧的FrameID
     const long unsigned int mnFrameId;
 
+    // 该帧时间戳
     const double mTimeStamp;
 
     // Grid (to speed up feature matching)
+    // 网格列数
     const int mnGridCols;
+    // 网格行数
     const int mnGridRows;
+    // 每个网格宽度的倒数
     const float mfGridElementWidthInv;
+    // 每个网格高度的倒数
     const float mfGridElementHeightInv;
 
     // Variables used by the tracking
@@ -154,16 +178,23 @@ public:
     long unsigned int mnBAGlobalForKF;
 
     // Calibration parameters
+    // 内参，基线长度，远近点阈值
     const float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
 
     // Number of KeyPoints
+    // 关键点个数
     const int N;
 
     // KeyPoints, stereo coordinate and descriptors (all associated by an index)
+    // 该关键帧的特征点
     const std::vector<cv::KeyPoint> mvKeys;
+    // 该关键帧矫正后的特征点
     const std::vector<cv::KeyPoint> mvKeysUn;
-    const std::vector<float> mvuRight; // negative value for monocular points
-    const std::vector<float> mvDepth; // negative value for monocular points
+    // 双目中右侧相机的水平坐标u，单目为负值
+    const std::vector<float> mvuRight;
+    // 关键点的深度，单目为负值
+    const std::vector<float> mvDepth;
+    // 描述子
     const cv::Mat mDescriptors;
 
     //BoW
@@ -174,18 +205,26 @@ public:
     cv::Mat mTcp;
 
     // Scale
+    // 金字塔层数
     const int mnScaleLevels;
+    // 缩放因子
     const float mfScaleFactor;
+    // 缩放因子的对数
     const float mfLogScaleFactor;
+    // 每一层的缩放因子
     const std::vector<float> mvScaleFactors;
+    // 每一层的缩放因子的平方
     const std::vector<float> mvLevelSigma2;
+    // 每一层的缩放因子的平方的倒数
     const std::vector<float> mvInvLevelSigma2;
 
     // Image bounds and calibration
+    // 图像边界
     const int mnMinX;
     const int mnMinY;
     const int mnMaxX;
     const int mnMaxY;
+    // 内参
     const cv::Mat mK;
 
 
@@ -193,10 +232,14 @@ public:
 protected:
 
     // SE3 Pose and camera center
+    // 相机位姿
     cv::Mat Tcw;
+    // 相机位姿的逆
     cv::Mat Twc;
+    // 相机中心坐标
     cv::Mat Ow;
 
+    // 两相机基线中心的世界坐标
     cv::Mat Cw; // Stereo middel point. Only for visualization
 
     // MapPoints associated to keypoints
@@ -224,8 +267,10 @@ protected:
     bool mbToBeErased;
     bool mbBad;    
 
+    // 基线长度的一半
     float mHalfBaseline; // Only for visualization
 
+    // 地图
     Map* mpMap;
 
     std::mutex mMutexPose;

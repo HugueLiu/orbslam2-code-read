@@ -45,10 +45,13 @@ public:
 
     KeyFrameDatabase(const ORBVocabulary &voc);
 
+  // 向数据库中添加一个关键帧
    void add(KeyFrame* pKF);
 
+  // 从数据库中清除一个关键帧
    void erase(KeyFrame* pKF);
 
+  // 清空数据库
    void clear();
 
    // Loop Detection
@@ -59,10 +62,11 @@ public:
 
 protected:
 
-  // Associated vocabulary
+  // Associated vocabulary，关联词袋
   const ORBVocabulary* mpVoc;
 
-  // Inverted file
+  // Inverted file， 以wordID作为索引查找关键帧
+  // 一个关键帧有多个word，因此对应多个wordID
   std::vector<list<KeyFrame*> > mvInvertedFile;
 
   // Mutex

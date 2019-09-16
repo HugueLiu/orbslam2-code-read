@@ -25,7 +25,7 @@
 
 namespace ORB_SLAM2
 {
-
+// 下一帧ID，用于赋值
 long unsigned int KeyFrame::nNextId=0;
 
 KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
@@ -260,6 +260,7 @@ int KeyFrame::TrackedMapPoints(const int &minObs)
         {
             if(!pMP->isBad())
             {
+                // 最少关联到minObs个关键帧
                 if(bCheckObs)
                 {
                     if(mvpMapPoints[i]->Observations()>=minObs)

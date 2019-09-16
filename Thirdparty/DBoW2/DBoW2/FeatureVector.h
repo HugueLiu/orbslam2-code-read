@@ -18,8 +18,9 @@
 namespace DBoW2 {
 
 /// Vector of nodes with indexes of local features
-class FeatureVector: 
-  public std::map<NodeId, std::vector<unsigned int> >
+// NodeId：该word的索引
+// vector<unsigned int>：该word对应的特征值的索引
+class FeatureVector: public std::map<NodeId, std::vector<unsigned int> >
 {
 public:
 

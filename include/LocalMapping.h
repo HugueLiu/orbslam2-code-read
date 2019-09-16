@@ -49,6 +49,7 @@ public:
     // Main function
     void Run();
 
+    // 插入关键帧
     void InsertKeyFrame(KeyFrame* pKF);
 
     // Thread Synch
@@ -67,6 +68,7 @@ public:
     void RequestFinish();
     bool isFinished();
 
+    // 返回当前未处理的关键帧数量
     int KeyframesInQueue(){
         unique_lock<std::mutex> lock(mMutexNewKFs);
         return mlNewKeyFrames.size();
@@ -104,6 +106,7 @@ protected:
     LoopClosing* mpLoopCloser;
     Tracking* mpTracker;
 
+    // 新插入的关键帧
     std::list<KeyFrame*> mlNewKeyFrames;
 
     KeyFrame* mpCurrentKeyFrame;
@@ -112,6 +115,7 @@ protected:
 
     std::mutex mMutexNewKFs;
 
+    // 是否需要停止当前的优化
     bool mbAbortBA;
 
     bool mbStopped;
