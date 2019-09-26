@@ -43,34 +43,35 @@ class KeyFrameDatabase
 {
 public:
 
-    KeyFrameDatabase(const ORBVocabulary &voc);
+	KeyFrameDatabase(const ORBVocabulary &voc);
 
-  // 向数据库中添加一个关键帧
-   void add(KeyFrame* pKF);
+	// 向数据库中添加一个关键帧
+	void add(KeyFrame* pKF);
 
-  // 从数据库中清除一个关键帧
-   void erase(KeyFrame* pKF);
+	// 从数据库中清除一个关键帧
+	void erase(KeyFrame* pKF);
+	
+	// 清空数据库
+	void clear();
 
-  // 清空数据库
-   void clear();
+	// Loop Detection
+	std::vector<KeyFrame *> DetectLoopCandidates(KeyFrame* pKF, float minScore);
 
-   // Loop Detection
-   std::vector<KeyFrame *> DetectLoopCandidates(KeyFrame* pKF, float minScore);
-
-   // Relocalization
-   std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F);
+	// Relocalization
+    // 为当前帧选择重定位候选关键帧
+	std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F);
 
 protected:
 
-  // Associated vocabulary，关联词袋
-  const ORBVocabulary* mpVoc;
+	// Associated vocabulary，关联词袋
+	const ORBVocabulary* mpVoc;
 
-  // Inverted file， 以wordID作为索引查找关键帧
-  // 一个关键帧有多个word，因此对应多个wordID
-  std::vector<list<KeyFrame*> > mvInvertedFile;
+	// Inverted file， 以wordID作为索引查找关键帧
+	// 一个关键帧有多个word，因此对应多个wordID
+	std::vector<list<KeyFrame*> > mvInvertedFile;
 
-  // Mutex
-  std::mutex mMutex;
+	// Mutex
+	std::mutex mMutex;
 };
 
 } //namespace ORB_SLAM

@@ -284,6 +284,7 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
     cv::Mat P = pMP->GetWorldPos(); 
 
     // 3D in camera coordinates
+    // 相机坐标系
     const cv::Mat Pc = mRcw*P+mtcw;
     const float &PcX = Pc.at<float>(0);
     const float &PcY= Pc.at<float>(1);
@@ -312,21 +313,26 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
     if(dist<minDistance || dist>maxDistance)
         return false;
 
-   // Check viewing angle
+    // Check viewing angle
+    // 平均视角
     cv::Mat Pn = pMP->GetNormal();
-
+    // a*b = |a||b|cos
+    // PO(当前视角)与Pn(平均视角)夹角的余弦值
     const float viewCos = PO.dot(Pn)/dist;
 
+    // 余弦太小, 即夹角太大
     if(viewCos<viewingCosLimit)
         return false;
 
     // Predict scale in the image
+    // 预测该深度的点位于哪一层
     const int nPredictedLevel = pMP->PredictScale(dist,this);
 
     // Data used by the tracking
     pMP->mbTrackInView = true;
     pMP->mTrackProjX = u;
     pMP->mTrackProjXR = u - mbf*invz;
+    // 右图中的u
     pMP->mTrackProjY = v;
     pMP->mnTrackScaleLevel= nPredictedLevel;
     pMP->mTrackViewCos = viewCos;

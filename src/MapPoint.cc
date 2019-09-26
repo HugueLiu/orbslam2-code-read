@@ -51,15 +51,17 @@ MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF
 {
     Pos.copyTo(mWorldPos);
     cv::Mat Ow = pFrame->GetCameraCenter();
+    // 归一化后的相对坐标
     mNormalVector = mWorldPos - Ow;
     mNormalVector = mNormalVector/cv::norm(mNormalVector);
 
     cv::Mat PC = Pos - Ow;
     const float dist = cv::norm(PC);
     const int level = pFrame->mvKeysUn[idxF].octave;
-    const float levelScaleFactor =  pFrame->mvScaleFactors[level];
+    const float levelScaleFactor = pFrame->mvScaleFactors[level];
     const int nLevels = pFrame->mnScaleLevels;
 
+    // 
     mfMaxDistance = dist*levelScaleFactor;
     mfMinDistance = mfMaxDistance/pFrame->mvScaleFactors[nLevels-1];
 

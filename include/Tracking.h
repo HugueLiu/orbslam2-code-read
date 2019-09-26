@@ -25,15 +25,15 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 
-#include"Viewer.h"
-#include"FrameDrawer.h"
-#include"Map.h"
-#include"LocalMapping.h"
-#include"LoopClosing.h"
-#include"Frame.h"
+#include "Viewer.h"
+#include "FrameDrawer.h"
+#include "Map.h"
+#include "LocalMapping.h"
+#include "LoopClosing.h"
+#include "Frame.h"
 #include "ORBVocabulary.h"
-#include"KeyFrameDatabase.h"
-#include"ORBextractor.h"
+#include "KeyFrameDatabase.h"
+#include "ORBextractor.h"
 #include "Initializer.h"
 #include "MapDrawer.h"
 #include "System.h"
@@ -141,20 +141,26 @@ protected:
     void CheckReplacedInLastFrame();
     // 通过参考关键帧来进行Tracking
     bool TrackReferenceKeyFrame();
-    // 更新上一帧位姿
+    // 更新上一帧位姿, 创建新的MapPoint
     void UpdateLastFrame();
     // 通过运动模型进行Tracking
     bool TrackWithMotionModel();
-
+    // tracking丢失则通过重定位重新获取当前帧位姿
     bool Relocalization();
 
+    // 更新局部地图
     void UpdateLocalMap();
+    // 更新局部MapPoint
     void UpdateLocalPoints();
+    // 更新局部关键帧
     void UpdateLocalKeyFrames();
 
+    // 局部地图追踪, 更新局部地图
     bool TrackLocalMap();
+    // 对当前帧和局部MapPoint做匹配, 在当前帧中增加新的MapPoint
     void SearchLocalPoints();
 
+    // 是否需要新的关键帧
     bool NeedNewKeyFrame();
     void CreateNewKeyFrame();
 
@@ -163,6 +169,7 @@ protected:
     // In that case we are doing visual odometry. The system will try to do relocalization to recover
     // "zero-drift" localization to the map.
     // 定位模式下，是否需要重新做VO
+    // 若上一帧中追踪到的MapPoint太少，则值为true
     bool mbVO;
 
     //Other Thread Pointers
@@ -212,7 +219,9 @@ protected:
     float mbf;
 
     //New KeyFrame rules (according to fps)
+    // 每秒的最小帧数 = 0
     int mMinFrames;
+    // 每秒的最大帧数 = fps
     int mMaxFrames;
 
     // Threshold close/far points
@@ -239,12 +248,13 @@ protected:
     // 上一个重定位的FrameID
     unsigned int mnLastRelocFrameId;
 
-    //Motion Model
+    //Motion Model, 运动模型, 前一帧的运动
     cv::Mat mVelocity;
 
     //Color order (true RGB, false BGR, ignored if grayscale)， 颜色顺序
     bool mbRGB;
 
+    // 用与tracking增加的临时MapPoint
     list<MapPoint*> mlpTemporalPoints;
 };
 

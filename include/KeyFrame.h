@@ -72,6 +72,7 @@ public:
     void UpdateBestCovisibles();
     std::set<KeyFrame *> GetConnectedKeyFrames();
     std::vector<KeyFrame* > GetVectorCovisibleKeyFrames();
+    // 返回最多N个关联关键帧
     std::vector<KeyFrame*> GetBestCovisibilityKeyFrames(const int &N);
     std::vector<KeyFrame*> GetCovisiblesByWeight(const int &w);
     int GetWeight(KeyFrame* pKF);
@@ -101,7 +102,7 @@ public:
     std::set<MapPoint*> GetMapPoints();
     // 返回所有的MapPoint
     std::vector<MapPoint*> GetMapPointMatches();
-    // 返回追踪的MapPoint数量，该点关联关键帧必须大于指定个数
+    // 返回追踪的MapPoint数量，该MapPoint必须至少存在于minObs个关键帧中
     int TrackedMapPoints(const int &minObs);
     // 返回指定索引的MapPoint
     MapPoint* GetMapPoint(const size_t &idx);
@@ -157,6 +158,7 @@ public:
     const float mfGridElementHeightInv;
 
     // Variables used by the tracking
+    // 防止局部关键帧的重复添加
     long unsigned int mnTrackReferenceForFrame;
     long unsigned int mnFuseTargetForKF;
 
@@ -168,8 +170,11 @@ public:
     long unsigned int mnLoopQuery;
     int mnLoopWords;
     float mLoopScore;
+    // 重定位是该关键帧是否第一次检索到
     long unsigned int mnRelocQuery;
+    // 该关键帧与查找帧共同的word个数
     int mnRelocWords;
+    // 该关键帧与查找帧的匹配分数
     float mRelocScore;
 
     // Variables used by loop closing

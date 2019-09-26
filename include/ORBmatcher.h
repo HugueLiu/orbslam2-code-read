@@ -46,6 +46,7 @@ public:
 
     // Search matches between Frame keypoints and projected MapPoints. Returns number of matches
     // Used to track the local map (Tracking)
+    // 通过重投影, 对Frame和局部MapPoint做特征点匹配, 从而为Frame添加新的MapPoint
     int SearchByProjection(Frame &F, const std::vector<MapPoint*> &vpMapPoints, const float th=3);
 
     // Project MapPoints tracked in last frame into the current frame and search matches.
@@ -55,6 +56,7 @@ public:
 
     // Project MapPoints seen in KeyFrame into the Frame and search matches.
     // Used in relocalisation (Tracking)
+    // 在当前帧中查找与关键帧匹配的关键点，且该点不包含在sAlreadyFound中
     int SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const std::set<MapPoint*> &sAlreadyFound, const float th, const int ORBdist);
 
     // Project MapPoints using a Similarity Transformation and search matches.
@@ -98,6 +100,7 @@ protected:
 
     bool CheckDistEpipolarLine(const cv::KeyPoint &kp1, const cv::KeyPoint &kp2, const cv::Mat &F12, const KeyFrame *pKF);
 
+    // 通过视角差值来确定搜索半径, 视角差越大, 搜索半径越大
     float RadiusByViewingCos(const float &viewCos);
 
     // 计算直方图中最大的三个值的索引

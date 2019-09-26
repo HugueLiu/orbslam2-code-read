@@ -63,6 +63,7 @@ public:
     void SetAcceptKeyFrames(bool flag);
     bool SetNotStop(bool flag);
 
+    // 设置停止BA标识符为true
     void InterruptBA();
 
     void RequestFinish();

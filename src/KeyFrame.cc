@@ -260,9 +260,9 @@ int KeyFrame::TrackedMapPoints(const int &minObs)
         {
             if(!pMP->isBad())
             {
-                // 最少关联到minObs个关键帧
                 if(bCheckObs)
                 {
+                    // 该MapPoint至少存在于minObs个关键帧中
                     if(mvpMapPoints[i]->Observations()>=minObs)
                         nPoints++;
                 }

@@ -46,6 +46,7 @@ public:
     void AddMapPoint(MapPoint* pMP);
     void EraseMapPoint(MapPoint* pMP);
     void EraseKeyFrame(KeyFrame* pKF);
+    // 设置参考MapPoint
     void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
     void InformNewBigChange();
     int GetLastBigChangeIdx();
@@ -54,7 +55,7 @@ public:
     std::vector<KeyFrame*> GetAllKeyFrames();
     // 返回所有地图点
     std::vector<MapPoint*> GetAllMapPoints();
-    // 
+    // 返回参考MapPoint
     std::vector<MapPoint*> GetReferenceMapPoints();
 
     // 返回地图中点的个数
@@ -80,7 +81,7 @@ protected:
     std::set<MapPoint*> mspMapPoints;
     // 地图中的所有关键帧
     std::set<KeyFrame*> mspKeyFrames;
-
+    // 参考MapPoint, 用于可视化
     std::vector<MapPoint*> mvpReferenceMapPoints;
 
     // 该地图中最大的关键帧ID

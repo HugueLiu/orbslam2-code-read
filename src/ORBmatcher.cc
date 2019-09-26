@@ -60,11 +60,13 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
         const int &nPredictedLevel = pMP->mnTrackScaleLevel;
 
         // The size of the window will depend on the viewing direction
+        // 搜索窗口大小
         float r = RadiusByViewingCos(pMP->mTrackViewCos);
 
         if(bFactor)
             r*=th;
 
+        // 在当前帧中查找该MapPoint点附近一定范围内的关键点 
         const vector<size_t> vIndices =
                 F.GetFeaturesInArea(pMP->mTrackProjX,pMP->mTrackProjY,r*F.mvScaleFactors[nPredictedLevel],nPredictedLevel-1,nPredictedLevel);
 
@@ -84,12 +86,15 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
         {
             const size_t idx = *vit;
 
+            // 如果该点已经是MapPoint了, 则退出
             if(F.mvpMapPoints[idx])
                 if(F.mvpMapPoints[idx]->Observations()>0)
                     continue;
 
+            // 该点在右图中有对应
             if(F.mvuRight[idx]>0)
             {
+                // 实际值与计算值直接的差值
                 const float er = fabs(pMP->mTrackProjXR-F.mvuRight[idx]);
                 if(er>r*F.mvScaleFactors[nPredictedLevel])
                     continue;
@@ -99,6 +104,7 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
 
             const int dist = DescriptorDistance(MPdescriptor,d);
 
+            // 选择最相似的两个点
             if(dist<bestDist)
             {
                 bestDist2=bestDist;
@@ -115,6 +121,7 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
         }
 
         // Apply ratio to second match (only if best and second are in the same scale level)
+        // 最好和次好的点要在同一层内, 并且距离接近
         if(bestDist<=TH_HIGH)
         {
             if(bestLevel==bestLevel2 && bestDist>mfNNratio*bestDist2)
@@ -124,18 +131,18 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
             nmatches++;
         }
     }
-
+    // 返回匹配到的个数
     return nmatches;
 }
 
 float ORBmatcher::RadiusByViewingCos(const float &viewCos)
 {
+    // 小于1.54°
     if(viewCos>0.998)
         return 2.5;
     else
         return 4.0;
 }
-
 
 bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const KeyFrame* pKF2)
 {
@@ -1495,6 +1502,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
 
     const cv::Mat Rcw = CurrentFrame.mTcw.rowRange(0,3).colRange(0,3);
     const cv::Mat tcw = CurrentFrame.mTcw.rowRange(0,3).col(3);
+    // 相机中心坐标
     const cv::Mat Ow = -Rcw.t()*tcw;
 
     // Rotation Histogram (to check rotation consistency)
@@ -1503,6 +1511,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
         rotHist[i].reserve(500);
     const float factor = 1.0f/HISTO_LENGTH;
 
+    // 关键帧的所有MapPoint
     const vector<MapPoint*> vpMPs = pKF->GetMapPointMatches();
 
     for(size_t i=0, iend=vpMPs.size(); i<iend; i++)
@@ -1511,10 +1520,12 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
 
         if(pMP)
         {
+            // 不包括已经发现的MapPoint
             if(!pMP->isBad() && !sAlreadyFound.count(pMP))
             {
-                //Project
+                // Project
                 cv::Mat x3Dw = pMP->GetWorldPos();
+                // 相机坐标系中的坐标值
                 cv::Mat x3Dc = Rcw*x3Dw+tcw;
 
                 const float xc = x3Dc.at<float>(0);
@@ -1529,7 +1540,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
                 if(v<CurrentFrame.mnMinY || v>CurrentFrame.mnMaxY)
                     continue;
 
-                // Compute predicted scale level
+                // Compute predicted scale level， 关键点与相机的距离
                 cv::Mat PO = x3Dw-Ow;
                 float dist3D = cv::norm(PO);
 
@@ -1545,6 +1556,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
                 // Search in a window
                 const float radius = th*CurrentFrame.mvScaleFactors[nPredictedLevel];
 
+                // 在该点附近查找关键点
                 const vector<size_t> vIndices2 = CurrentFrame.GetFeaturesInArea(u, v, radius, nPredictedLevel-1, nPredictedLevel+1);
 
                 if(vIndices2.empty())

@@ -198,6 +198,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectLoopCandidates(KeyFrame* pKF, float mi
 
 vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
 {
+    // 与该帧有共同word的关键帧
     list<KeyFrame*> lKFsSharingWords;
 
     // Search all keyframes that share a word with current frame
@@ -212,6 +213,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
             {
                 KeyFrame* pKFi=*lit;
                 // pKFi->mnRelocQuery默认为0
+                // 第一次搜索到该关键帧
                 if(pKFi->mnRelocQuery!=F->mnId)
                 {
                     pKFi->mnRelocWords=0;
@@ -226,6 +228,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
         return vector<KeyFrame*>();
 
     // Only compare against those keyframes that share enough words
+    // 关键帧含有最多的共同word的数量
     int maxCommonWords=0;
     for(list<KeyFrame*>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
     {
@@ -247,6 +250,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
         if(pKFi->mnRelocWords>minCommonWords)
         {
             nscores++;
+            // 该关键帧与查找帧的匹配分数
             float si = mpVoc->score(F->mBowVec,pKFi->mBowVec);
             pKFi->mRelocScore=si;
             lScoreAndMatch.push_back(make_pair(si,pKFi));
@@ -256,6 +260,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
     if(lScoreAndMatch.empty())
         return vector<KeyFrame*>();
 
+    // 每一关键帧的累计分数及最好的一帧
     list<pair<float,KeyFrame*> > lAccScoreAndMatch;
     float bestAccScore = 0;
 
@@ -298,6 +303,7 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
         if(si>minScoreToRetain)
         {
             KeyFrame* pKFi = it->second;
+            // 是否已经添加过
             if(!spAlreadyAddedKF.count(pKFi))
             {
                 vpRelocCandidates.push_back(pKFi);

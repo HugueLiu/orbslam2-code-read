@@ -74,9 +74,9 @@ public:
     // 返回替代该MapPoint的对象
     MapPoint* GetReplaced();
 
-    // ?
+    // 增加visible的帧数
     void IncreaseVisible(int n=1);
-    // ?
+    // 增加found的帧数
     void IncreaseFound(int n=1);
     // found/visible
     float GetFoundRatio();
@@ -93,9 +93,13 @@ public:
     // 更新该点平均方向
     void UpdateNormalAndDepth();
 
+    // 返回最小距离
     float GetMinDistanceInvariance();
+    // 返回最大距离
     float GetMaxDistanceInvariance();
+    // 预测该距离的MapPoint在该KeyFrame的哪一层
     int PredictScale(const float &currentDist, KeyFrame*pKF);
+    // 预测该距离的MapPoint在该Frame的哪一层
     int PredictScale(const float &currentDist, Frame* pF);
 
 public:
@@ -110,13 +114,19 @@ public:
     int nObs;
 
     // Variables used by the tracking
+    // 投影后的u
     float mTrackProjX;
+    // 投影后的v
     float mTrackProjY;
+    // 投影后在右图中的u
     float mTrackProjXR;
     // 是否追踪该点
     bool mbTrackInView;
+    // 预测该点在该帧中位于哪一层
     int mnTrackScaleLevel;
+    // 平均视角与在当前帧中的视角差的余弦
     float mTrackViewCos;
+    // 防止重复添加
     long unsigned int mnTrackReferenceForFrame;
     // 观测到该点的最后一帧ID
     long unsigned int mnLastFrameSeen;
@@ -156,7 +166,10 @@ protected:
     KeyFrame* mpRefKF;
 
     // Tracking counters
+    // visible指该点可以被某一帧观测到（在视野内），但不一定是MapPoint
+    // 可以观测到该点的帧数
     int mnVisible;
+    // 包含该点作为MapPoint的帧数
     int mnFound;
 
     // 指明该对象是否可用？Bad flag (we do not currently erase MapPoint from memory)
