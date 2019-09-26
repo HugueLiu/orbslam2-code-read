@@ -22,4 +22,6 @@ build/
 *~
 lib/
 .vscode
+node.pdf
+node.html
 
