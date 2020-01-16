@@ -1,9 +1,10 @@
-# ORB-SLAM2代码解读
+# ORB-SLAM2 代码解读
 
-## 1.   SYSTEM OVERVIEW
+## 1 SYSTEM OVERVIEW
 
-ORB-SLAM2主要由3个模块组成，分别为Tracking, Mapping和Loop closing. 如下图所示：![orbslam2](orbslam2.jpg)
-每个模块对应一个线程，另外还有viewer线程用于显示，执行完Loop closing后还会开启一个全局BA线程。
+ORB-SLAM2 主要由3个模块组成，分别为 Tracking, Mapping 和 Loop closing。 如下图所示：
+![orbslam2](orbslam2.jpg)
+每个模块对应一个线程，另外还有 viewer 线程用于显示，执行完 Loop closing 后还会开启一个全局 BA 线程。
 
 ### 1.1 Monocular
 
@@ -65,11 +66,11 @@ FrameDrawer|`FrameDrawer.cc`|
 MapDrawer|`MapDrawer.cc`|
 ORBextractor|`ORBextractor.cc`|提取ORB特征点
 
-## 2. stereo代码解读
+## 2 stereo代码解读
 
 ### 1. `stereo_kitti.cc` : 程序入口
 
-```C++
+~~~C++{.line-numbers}
 LoadImages(); // 加载左右图像的路径及其时间戳
 ORB_SLAM2::System SLAM(); // 初始化SLAM系统对象(2.1)
 for(int ni=0; ni<nImages; ni++){ // 循环读取图像
@@ -77,11 +78,11 @@ for(int ni=0; ni<nImages; ni++){ // 循环读取图像
 }
 SLAM.Shutdown(); // 停止所有线程
 SLAM.SaveTrajectoryKITTI(); // 保存轨迹
-```
+~~~
 
 ### 2.1 `System::system()` : SLAM系统的初始化
 
-```C++
+~~~C++{.line-numbers}
 mpVocabulary = new ORBVocabulary();
 mpVocabulary->loadFromTextFile(strVocFile); //加载ORB词典
 mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary); // 创建关键帧数据库
@@ -101,38 +102,38 @@ mpViewer = new Viewer();
 mptViewer = new thread(); // 创建Viewer对象并启动线程
 
 // 设置线程之间的指针
-```
+~~~
 
 ### 2.2 `System::TrackStereo()` : Tracking线程（主线程）
 
-```C++
+~~~C++{.line-numbers}
 // 判断是否更改模式（定位，定位与建图）
 // 判断是否重置
 cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft,imRight,timestamp); // 输入图像，获得变换位姿(3.2)
-```
+~~~
 
 ### 3.1 `Tracking::Tracking()` : Tracking初始化 
 
-```C++
+~~~C++{.line-numbers}
 // 加载相机参数（内参、去畸变参数、基线、帧率、ORB参数等）
 mpORBextractorLeft = new ORBextractor();
 mpORBextractorRight = new ORBextractor(); // 初始化左右图像的ORB特征提取器(5.1)
 mThDepth = mbf*(float)fSettings["ThDepth"]/fx; // 设置远近点阈值
-```
+~~~
 
 ### 3.2 `Tracking::GrabImageStereo()` : 输入图像处理  
 
-```C++
+~~~C++{.line-numbers}
 cvtColor(mImGray,mImGray,CV_RGB2GRAY);
 cvtColor(imGrayRight,imGrayRight,CV_RGB2GRAY);  //图像转换为灰度图
 mCurrentFrame = Frame(); //构造Frame(4.1)
 
 Track(); // (3.3)
-```
+~~~
 
 ### 3.3 `Tracking::Track()` : Tracking线程（主线程）
 
-```C++
+~~~C++{.line-numbers}
 StereoInitialization(); // 第一帧初始化(3.4)
 mpFrameDrawer->Update(this); // 更新FrameDrawer
 
@@ -173,11 +174,11 @@ TrackLocalMap();
  mVelocity = mCurrentFrame.mTcw*LastTwc;
 // 清除在UpdateLastFrame中创建的临时MapPoint
 // 创建新的关键帧
-```
+~~~
 
 ### 3.4 `Tracking::StereoInitialization()` : 双目、RGBD初始化
 
-```C++
+~~~C++{.line-numbers}
 if(mCurrentFrame.N>500)  // 关键点数量必须大于500
     mCurrentFrame.SetPose(); // 设置当前帧为位姿为坐标原点
     KeyFrame* pKFini = new KeyFrame(); // 创建初始关键帧，并将该帧插入到地图中(6.1)
@@ -190,11 +191,11 @@ if(mCurrentFrame.N>500)  // 关键点数量必须大于500
     mpMap->AddMapPoint(pNewMP); // 向地图中添加点
 
     mpLocalMapper->InsertKeyFrame(pKFini); // 向局部建图线程中插入一个关键帧
-```
+~~~
 
 ### 3.5 `Tracking::TrackReferenceKeyFrame()` : 通过参考关键帧进行Tracking
 
-```C++
+~~~C++{.line-numbers}
 // 计算当前帧的词袋表示
 mCurrentFrame.ComputeBoW();
 // 计算当前帧与参考关键帧的关键点匹配
@@ -204,11 +205,11 @@ mCurrentFrame.SetPose(mLastFrame.mTcw);
 // 位姿优化
 Optimizer::PoseOptimization(&mCurrentFrame); 
 // 舍弃outlier点
-```
+~~~
 
 ### 3.6 `Tracking::TrackWithMotionModel()` : 通过运动模型进行Tracking
 
-```C++
+~~~C++{.line-numbers}
 // 更新上一帧位姿
 UpdateLastFrame();
 // 根据上一帧的运动设置初始值
@@ -218,11 +219,11 @@ matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,);
 // 位姿优化
 Optimizer::PoseOptimization(&mCurrentFrame);
 // 对齐outlier点
-```
+~~~
 
 ### 3.7 `Tracking::Relocalization()` : 重定位
 
-```C++
+~~~C++{.line-numbers}
 // 计算当前帧的词袋表示
  mCurrentFrame.ComputeBoW();
 // 计算当前帧的重定位候选关键帧(7.1)
@@ -240,11 +241,11 @@ int nGood = Optimizer::PoseOptimization(&mCurrentFrame);
 // 若good点太少，则通过重投影匹配关键点，重新进行优化
 matcher2.SearchByProjection(mCurrentFrame,vpCandidateKFs[i],,,);
 nGood = Optimizer::PoseOptimization(&mCurrentFrame);
-```
+~~~
 
 ### 3.8 `Tracking::TrackLocalMap()` : 局部地图追踪, 更新局部地图
 
-```C++
+~~~C++{.line-numbers}
 // 更新局部地图(3.9)
 UpdateLocalMap();
 // 通过将当前帧与局部MapPoint做匹配, 添加新的MapPoint(3.12)
@@ -253,20 +254,20 @@ SearchLocalPoints();
 Optimizer::PoseOptimization(&mCurrentFrame);
 // 统计当前帧中inlier MapPoint的数量
 // 若最近1s重定位过, 则设置一个更为严格的条件, inlier MapPoint少于50认为tracking失败, 否则若inlier MapPoint少于30认为tracking失败
-```
+~~~
 
 ### 3.9 `Tracking::UpdateLocalMap()` : 更新局部地图
 
-```C++
+~~~C++{.line-numbers}
 // 更新局部关键帧(3.10)
 UpdateLocalKeyFrames();
 // 更新局部MapPoint(3.11)
 UpdateLocalPoints();
-```
+~~~
 
 ### 3.10 `Tracking::UpdateLocalKeyFrames()` : 更新局部关键帧
 
-```C++
+~~~C++{.line-numbers}
 // 1. 记录所有与当前帧共享MapPoint的关键帧keyframeCounter
 // 2. 清空局部关键帧
 // 3. 添加keyframeCounter中的帧作为局部关键帧
@@ -275,18 +276,18 @@ UpdateLocalPoints();
 //     4.2 添加其子关键帧
 //     4.3 添加其父关键帧
 // 5. 选择具有最多共同MapPoint的KeyFrame作为referenceKeyFrame
-```
+~~~
 
 ### 3.11 `Tracking::UpdateLocalPoints()` : 更新局部MapPoint
 
-```C++
+~~~C++{.line-numbers}
 // 1. 清空局部MapPoint
 // 2. 将所有局部关键帧的MapPoint作为当前局部MapPoint
-```
+~~~
 
 ### 3.12 `Tracking::SearchLocalPoints()` : 对当前帧与局部地图做特征点匹配，增加当前帧的MapPoint
 
-```C++
+~~~C++{.line-numbers}
 // 1. 标记当前帧中的MapPoint后续不需要计算
 pMP->mnLastFrameSeen = mCurrentFrame.mnId;
 pMP->mbTrackInView = false;
@@ -294,11 +295,11 @@ pMP->mbTrackInView = false;
 mCurrentFrame.isInFrustum(pMP,0.5);
 // 3. 通过重投影进行特征点匹配, 为当前帧添加新的MapPoint(8.1)
 matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
-```
+~~~
 
 ### 3.13 `Tracking::NeedNewKeyFrame()` : 是否需要新的关键帧
 
-```C++
+~~~C++{.line-numbers}
 // 1. tracking模式下不需要关键帧
 mbOnlyTracking
 // 2. 局部建图线程正在进行回环检测，不需要关键帧
@@ -307,35 +308,145 @@ mpLocalMapper->isStopped() || mpLocalMapper->stopRequested()
 mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && nKFs>mMaxFrames
 // 4. 统计当前帧中inlier close MapPoint的数量以及非inlier MapPoint的close point数量
 int nNonTrackedClose, TrackedClose;
+~~~
 
-```
+## 4　Frame类
+图像帧，表示每一帧的图像。包括特征点的提取，特征点去畸变及双目匹配计算深度等过程。每一帧包含了左右图像（单目只有左图）的关键点及描述子、当前帧的时间、位姿、帧ID、参考关键帧、图像金字塔的相关参数、相机参数、网格表示等内容。
 
-### 4.1 `Frame::Frame()` : Frame初始化（构造Frame）
+### 4.1 `Frame::Frame()` : Frame初始化（构造函数）
+双目与RGBD的构造函数基本相同，单目只是缺少了双目匹配及深度计算的过程
 
-```C++
-mnId=nNextId++; // 设置frame ID
-
+~~~C++{.line-numbers}
+// 设置frame ID
+mnId=nNextId++; 
+// 两个线程提取特征点(5.2)
 thread threadLeft(&Frame::ExtractORB,this,0,imLeft);
-thread threadRight(&Frame::ExtractORB,this,1,imRight); // 提取特征点(5.2)
-UndistortKeyPoints();   // 关键点去畸变， 只适用于RGBD图像
-ComputeStereoMatches(); // 计算左右图像的关键点匹配和关键点深度(4.2)
-ComputeImageBounds();   // 计算图像边界（只在第一帧计算）
-AssignFeaturesToGrid(); // 将特征点分配到网格中，加速特征点匹配
-```
+thread threadRight(&Frame::ExtractORB,this,1,imRight);
+// 关键点去畸变
+UndistortKeyPoints();
+// 计算左右图像的关键点匹配和关键点深度(4.2)
+ComputeStereoMatches();
+// 计算图像边界（只在第一帧计算）
+ComputeImageBounds();
+// 将特征点分配到网格中，加速特征点匹配
+AssignFeaturesToGrid(); 
+~~~
 
 ### 4.2 `Frame::ComputeStereoMatches()` : 计算左右图像的关键点匹配和关键点深度
 
-```C++
+~~~C++{.line-numbers}
 // 1. 将右图中关键点按v坐标排列，方便后续与左图关键点匹配
 // 2. 对于左图中每个关键点，计算与其对应的右图关键点（Hamming距离最小）
 // 3. 以上一步获得的右图关键点坐标为初始值，在其附近通过滑动窗口搜索与左图关键点窗口距离最小的窗口
 // 4. 在上一步获得的窗口坐标附近拟合抛物线，并得到最小值，以此值作为右图的对应值
 // 5. 通过disparity计算特征点深度
-```
+~~~
+
+### 4.3 `Frame::AssignFeaturesToGrid()` ：将关键点按照网格分配
+将图像的关键点按照像素坐标分配到网格中。
+
+~~~c++{.line-numbers}
+// 若某个去畸变后的关键点在图像的有效边界内，则将其分配到网格
+const cv::KeyPoint &kp = mvKeysUn[i];
+if(PosInGrid(kp,nGridPosX,nGridPosY))
+    mGrid[nGridPosX][nGridPosY].push_back(i);
+~~~
+
+### 4.4 `Frame::ExtractORB()` ：提取图像的ORB特征点及描述子
+
+~~~c++{.line-numbers}
+// 若flag=0，提取左图，否则为右图
+if(flag==0)
+    (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors);
+else
+    (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight);
+~~~
+
+### 4.5 `Frame::SetPose()` ：设置并更新该帧的相机位姿矩阵
+
+~~~c++{.line-numbers}
+mTcw = Tcw.clone();
+UpdatePoseMatrices();
+~~~
+
+### 4.6 `Frame::UpdatePoseMatrices()` ：更新该帧的相机位姿矩阵
+
+~~~c++{.line-numbers}
+// 相机坐标系到世界坐标系的旋转矩阵（即将世界坐标系中的点转换到相机坐标系中）
+mRcw = mTcw.rowRange(0,3).colRange(0,3);
+// 世界坐标系到相机坐标系的旋转矩阵
+mRwc = mRcw.t();
+// 相机坐标系到世界坐标系的平移向量
+mtcw = mTcw.rowRange(0,3).col(3);
+// 相机中心在世界坐标系的坐标（=twc）
+// R'(Rp+t)+t'= p
+// t' = -R't
+mOw = -mRcw.t()*mtcw;
+~~~
+
+### 4.7 `Frame::isInFrustum()` ：判断给定点地图点是否在指定视角范围内
+给定一个地图点，比较该点在该帧的视角（即相机原点到该点的向量）与该点在其余观测到该点的关键帧中的视角方向的平均值，若它们之间的的差值小于给定值，则返回true。
+
+~~~c++{.line-numbers}
+// 将指定点投影到像素平面，计算u,v，确保该点在图像边界内
+const cv::Mat Pc = mRcw*P+mtcw;
+// 计算该点在该帧的视角方向
+const cv::Mat PO = P-mOw;
+// 该点距离相机中心的距离，确保其位于指定阈值内
+const float dist = cv::norm(PO);
+// 当前视角方向与平均视角方向的余弦值，需要大于给定阈值
+const float viewCos = PO.dot(Pn)/dist;
+// 设置该点在该帧（最新帧）投影的参数（u,v,ur,level）
+~~~
+
+### 4.8 `Frame::GetFeaturesInArea()` ：获取指定区域内的所有关键点
+
+~~~c++{.line-numbers}
+// 通过网格的方式获取
+// 1. 首先获取指定区域的网格坐标
+// 2. 获取指定网格内的关键点
+~~~
+
+### 4.9 `Frame::PosInGrid()` ：计算给定点的网格位置
+
+~~~c++{.line-numbers}
+// 计算给定点的网格坐标
+posX = round((kp.pt.x-mnMinX)*mfGridElementWidthInv);
+posY = round((kp.pt.y-mnMinY)*mfGridElementHeightInv);
+// 并返回该点是否在图像范围内
+// （考虑了关键点可能未去畸变的情况）
+~~~
+
+### 4.10 `Frame::ComputeBoW()` ：计算该帧的词袋表示
+
+~~~c++{.line-numbers}
+// 将描述子转换为词袋的表示形式
+mpORBvocabulary->transform(vCurrentDesc,mBowVec,mFeatVec,4);
+~~~
+
+### 4.11 `Frame::UndistortKeyPoints()` ：关键点去畸变
+
+~~~c++{.line-numbers}
+// 若不需要去畸变，则去畸变的关键点只是关键点的直接复制
+if(mDistCoef.at<float>(0)==0.0){
+    mvKeysUn=mvKeys;
+}
+// 否则对关键点去畸变
+~~~
+
+### 4.12 `Frame::ComputeImageBounds()` ：计算图像边界
+
+~~~c++{.line-numbers}
+// 对于未去过畸变的图像，图像边界由原图像的四个角去畸变后的位置得到，
+// 但是这里并不会实际进行去畸变操作
+// 对于去过畸变的图像，图像边界即为图像的实际边界
+~~~
+
+## 5　ORBextractor类
 
 ### 5.1 `ORBextractor::ORBextractor()` : ORBextractor初始化
 
-```C++
+~~~C++{.line-numbers}
 mvScaleFactor[i]=mvScaleFactor[i-1]*scaleFactor; // 每层的缩放因子
 mvLevelSigma2[i]=mvScaleFactor[i]*mvScaleFactor[i]; // 每层的缩放因子平方
 mvInvScaleFactor[i]=1.0f/mvScaleFactor[i];
@@ -361,22 +472,22 @@ for (v = HALF_PATCH_SIZE, v0 = 0; v >= vmin; --v){
     umax[v] = v0;
     ++v0;
 }
-```
+~~~
 
 ![orbslam2](umax.png)
 
 ### 5.2 `ORBextractor::operator()()` : 检测关键点及描述子
 
-```C++
+~~~C++{.line-numbers}
 ComputePyramid(image);  // 构建图像金字塔(5.3)
 ComputeKeyPointsOctTree(); // 关键点计算(以四叉树表示)(5.4)
 GaussianBlur(); // 对图像进行高斯滤波
 computeDescriptors(); // 计算描述子
-```
+~~~
 
 ### 5.3 `ORBextractor::ComputePyramid(cv::Mat image)` : 构建图像金字塔
 
-```C++
+~~~C++{.line-numbers}
 // 计算每一层图像
 for (int level = 0; level < nlevels; ++level)
     mvImagePyramid[level] = temp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
@@ -388,21 +499,21 @@ for (int level = 0; level < nlevels; ++level)
         copyMakeBorder(image, temp, EDGE_THRESHOLD, EDGE_THRESHOLD,
         EDGE_THRESHOLD, EDGE_THRESHOLD, BORDER_REFLECT_101);
     }
-```
+~~~
 
 ### 5.4 `ORBextractor::ComputeKeyPointsOctTree()` : 关键点计算(以四叉树表示)
 
-```C++
+~~~C++{.line-numbers}
 for (int level = 0; level < nlevels; ++level)
     // 将图像去除边缘后，按照30的边长划分cell，相邻两个cell有6行/列坐标的重叠
     FAST(); // 在每一层,提取每个cell的FAST特征点
     keypoints = DistributeOctTree(); // 将关键点分配到四叉树节点中(5.5)
     computeOrientation(); // 计算每个特征点的方向
-```
+~~~
 
 ### 5.5 `ORBextractor::DistributeOctTree()` : 以四叉数的形式表示关键点，按照坐标将关键点划分到不同的节点中，每个节点只包含一个响应最大的关键点
 
-```C++
+~~~C++{.line-numbers}
 // 按照图像纵横比计算初始节点
 const int nIni = round(static_cast<float>(maxX-minX)/(maxY-minY));
 // 把图像关键点按位置分配到初始节点中
@@ -414,18 +525,18 @@ lit->DivideNode(n1,n2,n3,n4);
 if(vNodeKeys[k].response>maxResponse)
     pKP = &vNodeKeys[k];
     maxResponse = vNodeKeys[k].response;
-```
+~~~
 
 ### 6.1 `KeyFrame::KeyFrame()` : 通过Frame创建关键帧
 
-```C++
+~~~C++{.line-numbers}
 // 1. 复制Frame的相关参数到该关键帧
 // 2. 设置该关键帧位姿
-```
+~~~
 
 ### 7.1 `KeyFrameDatabase::DetectRelocalizationCandidates()` : 查找重定位的候选关键帧
 
-```C++
+~~~C++{.line-numbers}
 // 1. 查找与当前帧有相同word的所有关键帧
 // 2. 保留相同word的个数大于一定阈值的关键帧(KF)，同时计算保留关键帧与当前帧的匹配分数
 // 3. 对于KF中的每一帧：
@@ -434,11 +545,11 @@ if(vNodeKeys[k].response>maxResponse)
 //      3.3 得到 <累计分数, CKF中分数最高的KF(HKF)>
 // 4. 若累计分数大于一定阈值，则将该分数对应的HKF作为候选KF
 // 5. 返回所有候选KF
-```
+~~~
 
 ### 8.1 `ORBmatcher::SearchByProjection(Frame&, vector<MapPoint*>, float)` : 通过重投影, 对Frame和局部MapPoint做特征点匹配, 从而为Frame添加新的MapPoint
 
-```C++
+~~~C++{.line-numbers}
 // 对于局部地图中的每个点
 for(size_t iMP=0; iMP<vpMapPoints.size(); iMP++)
     // 通过当前帧中视角与平均视角的差确定搜索窗口大小
@@ -447,4 +558,4 @@ for(size_t iMP=0; iMP<vpMapPoints.size(); iMP++)
     F.GetFeaturesInArea();
     // 选择距离最小的两个关键点, 若两个关键点在同一个octave, 
     // 并且距离相差较小, 则认为符合条件, 即将该点作为MapPoint
-```
+~~~
